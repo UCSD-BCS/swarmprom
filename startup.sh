@@ -18,3 +18,5 @@ echo "Starting up swarmprom..."
 echo ""
 
 docker stack deploy -c docker-compose.yml monitor
+echo "...done"
+echo
