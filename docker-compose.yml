@@ -4,6 +4,8 @@ networks:
   net:
     driver: overlay
     attachable: true
+  main_proxy:
+    external: true
 
 volumes:
     prometheus: {}
@@ -11,8 +13,8 @@ volumes:
     alertmanager: {}
 
 configs:
-  caddy_config:
-    file: ./caddy/Caddyfile
+  # caddy_config:
+  #   file: ./caddy/Caddyfile
   dockerd_config:
     file: ./dockerd-exporter/Caddyfile
   node_rules:
@@ -61,6 +63,7 @@ services:
     image: stefanprodan/swarmprom-grafana:5.3.4
     networks:
       - net
+      - main_proxy
     environment:
       - GF_SECURITY_ADMIN_USER=${ADMIN_USER:-admin}
       - GF_SECURITY_ADMIN_PASSWORD=${ADMIN_PASSWORD}
@@ -85,6 +88,13 @@ services:
           memory: 128M
         reservations:
           memory: 64M
+      labels:
+        - com.df.serviceDomain=swarmstatus.biology.ucsd.edu
+        - com.df.notify=true
+        - com.df.port=3000
+        - com.df.distribute=true
+        - com.df.proxyInstanceName=main_proxy
+
 
   alertmanager:
     image: stefanprodan/swarmprom-alertmanager:v0.14.0
@@ -115,11 +125,20 @@ services:
     image: cloudflare/unsee:v0.8.0
     networks:
       - net
+      - main
     environment:
       - "ALERTMANAGER_URIS=default:http://alertmanager:9093"
     deploy:
       mode: replicated
       replicas: 1
+      labels:
+        - com.df.serviceDomain=swarmstatus.biology.ucsd.edu
+        - com.df.servicePath=/unsee
+        - com.df.notify=true
+        - com.df.port=8080
+        - com.df.distribute=true
+        - com.df.reqPathSearchReplace=unsee,
+        - com.df.proxyInstanceName=main_proxy
 
   node-exporter:
     image: stefanprodan/swarmprom-node-exporter:v0.16.0
@@ -173,39 +192,39 @@ services:
         reservations:
           memory: 128M
 
-  caddy:
-    image: stefanprodan/caddy
+  # caddy:
+  #   image: stefanprodan/caddy
     # ports:
       # - "3000:3000"
       # - "9090:9090"
       # - "9093:9093"
       # - "9094:9094"
-    networks:
-      - net
-    environment:
-      - ADMIN_USER=${ADMIN_USER:-admin}
-      - ADMIN_PASSWORD=${ADMIN_PASSWORD}
-    configs:
-      - source: caddy_config
-        target: /etc/caddy/Caddyfile
-    deploy:
-      mode: replicated
-      replicas: 1
-      placement:
-        constraints:
-          - node.role == manager
-      resources:
-        limits:
-          memory: 128M
-        reservations:
-          memory: 64M
-      labels:
-        - com.df.serviceDomain=jenkins.biology.ucsd.edu
-        - com.df.notify=true
-        - com.df.port=3000
-        - com.df.distribute=true
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:3000"]
-      interval: 5s
-      timeout: 1s
-      retries: 5
+    # networks:
+    #   - net
+    # environment:
+    #   - ADMIN_USER=${ADMIN_USER:-admin}
+    #   - ADMIN_PASSWORD=${ADMIN_PASSWORD}
+    # configs:
+    #   - source: caddy_config
+    #     target: /etc/caddy/Caddyfile
+    # deploy:
+    #   mode: replicated
+    #   replicas: 1
+    #   placement:
+    #     constraints:
+    #       - node.role == manager
+    #   resources:
+    #     limits:
+    #       memory: 128M
+    #     reservations:
+    #       memory: 64M
+    #   labels:
+    #     - com.df.serviceDomain=jenkins.biology.ucsd.edu
+    #     - com.df.notify=true
+    #     - com.df.port=3000
+    #     - com.df.distribute=true
+    # healthcheck:
+    #   test: ["CMD", "curl", "-f", "http://localhost:3000"]
+    #   interval: 5s
+    #   timeout: 1s
+    #   retries: 5
