@@ -89,7 +89,7 @@ services:
         reservations:
           memory: 64M
       labels:
-        - com.df.serviceDomain=swarmstatus.biology.ucsd.edu
+        - com.df.serviceDomain=jenkins.biology.ucsd.edu
         - com.df.notify=true
         - com.df.port=3000
         - com.df.distribute=true
@@ -132,7 +132,7 @@ services:
       mode: replicated
       replicas: 1
       labels:
-        - com.df.serviceDomain=swarmstatus.biology.ucsd.edu
+        - com.df.serviceDomain=jenkins.biology.ucsd.edu
         - com.df.servicePath=/unsee
         - com.df.notify=true
         - com.df.port=8080
